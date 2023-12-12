@@ -16,7 +16,7 @@
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 
 // создание объекта датчика температуры
-MicroDS18B20 <A0> temperature_sensor;
+MicroDS18B20 <7> temperature_sensor;
 
 // объявление параметров
 float temperature = 0.0;                  // значение температуры
@@ -24,8 +24,8 @@ bool has_gas = false;                     // флаг наличия газа
 bool has_fire = false;                    // флаг наличия пламени
 
 // контакты датчиков
-int temperature_contact = A0;             // контакт датчика температуры
-int gas_contact = A1;                     // контакт датчика газов
+int temperature_contact = 7;              // контакт датчика температуры
+int gas_contact = A0;                     // контакт датчика газов
 int fire_contact = A2;                    // контакт датчика пламени
 
 // контакты светодиодов
@@ -53,7 +53,7 @@ Keypad keypad = Keypad(makeKeymap(keypad_matrix), keypad_rows_contacts, keypad_c
 
 
 bool device_work = false;             // флаг включения устройства
-int cycle_counter= 0;                 // счетчик итераций главного цикла
+int cycle_counter = 0;                // счетчик итераций главного цикла
 int mode = OUTPUT_ALL;                // режим работы устройства
 
 
@@ -166,8 +166,8 @@ void loop() {
     digitalWrite(initial_light_contact, LOW);
     digitalWrite(gas_light_contact, LOW);
     digitalWrite(fire_light_contact, LOW);
-    digitalWrite(gas_piezo_contact, LOW);
-    digitalWrite(fire_piezo_contact, LOW);
+    //digitalWrite(gas_piezo_contact, LOW);
+    //digitalWrite(fire_piezo_contact, LOW);
   }
 
   // запуск потока модуля клавиатуры
@@ -181,7 +181,7 @@ void temperature_handler() {
   temperature_sensor.requestTemp();               // запрос температуры
   delay(1000);                                    // ожидание обработки температуры
   if (temperature_sensor.readTemp()) {            // если температура прочитана
-    temperature = temperature_sensor.readTemp();  // запомнить тепературу
+    temperature = temperature_sensor.getTemp();   // запомнить тепературу
     Serial.println("Temp sensor value: " +  String(temperature));
   }
 }
@@ -192,28 +192,30 @@ void gas_handler() {
   if (value > 200) {                              // газы обнаружены
     has_gas = true;                               // запомнить состояние
     digitalWrite(gas_light_contact, HIGH);        // включить светодиод
-    digitalWrite(gas_piezo_contact, HIGH);        // включить пьезодинамик
+    //digitalWrite(gas_piezo_contact, HIGH);        // включить пьезодинамик
+    tone(gas_piezo_contact, 1000, 1000);
   }
   else {                                          // газы не обнаружены
     has_gas = false;                              // запомнить состояние
     digitalWrite(gas_light_contact, LOW);         // выключить светодиод
-    digitalWrite(gas_piezo_contact, LOW);         // выключить пьезодинамик
+    // digitalWrite(gas_piezo_contact, LOW);         // выключить пьезодинамик
   }
   Serial.print("Gas sensor value: " + String(value));
 }
 
 // функция индикации наличия пламени
 void fire_handler() {
-  int value = digitalRead(fire_contact);          // чтение значения датчика пламени
-  if (value == HIGH) {                            // пламя обнаружено
+  int value = analogRead(fire_contact);          // чтение значения датчика пламени
+  if (value >= 100) {                            // пламя обнаружено
     has_fire = true;                              // запомнить состояние
     digitalWrite(fire_light_contact, HIGH);       // включить светодиод
-    digitalWrite(fire_piezo_contact, HIGH);       // включить пьезодинамик
+    //digitalWrite(fire_piezo_contact, HIGH);       // включить пьезодинамик
+    tone(fire_piezo_contact, 1000, 1000);
   }
   else {                                          // пламя не обнаружено
     has_fire = false;                             // запомнить состояние
     digitalWrite(fire_light_contact, LOW);        // выключить светодиод
-    digitalWrite(fire_piezo_contact, LOW);        // выключить пьезодинамик
+    //digitalWrite(fire_piezo_contact, LOW);        // выключить пьезодинамик
   }
   Serial.print("Fire sensor value: " + String(value));
 }
