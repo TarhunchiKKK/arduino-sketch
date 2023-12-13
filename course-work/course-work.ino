@@ -16,7 +16,7 @@
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 
 // создание объекта датчика температуры
-MicroDS18B20 <7> temperature_sensor;
+MicroDS18B20 <A3> temperature_sensor;
 
 // объявление параметров
 float temperature = 0.0;                  // значение температуры
@@ -24,7 +24,7 @@ bool has_gas = false;                     // флаг наличия газа
 bool has_fire = false;                    // флаг наличия пламени
 
 // контакты датчиков
-int temperature_contact = 7;              // контакт датчика температуры
+int temperature_contact = A3;             // контакт датчика температуры
 int gas_contact = A0;                     // контакт датчика газов
 int fire_contact = A2;                    // контакт датчика пламени
 
@@ -46,7 +46,7 @@ char keypad_matrix[4][3] = {
 };
 // контакты микроконтроллера для подключения модуля клавиатуры
 byte keypad_rows_contacts[4] = { 6, 5, 4, 3 };
-byte keypad_cols_contacts[3] = { 2, 1, 0 };
+byte keypad_cols_contacts[3] = { 2, 8, 7 };
 
 //создание объекта модуля клавиатуры
 Keypad keypad = Keypad(makeKeymap(keypad_matrix), keypad_rows_contacts, keypad_cols_contacts, (byte)4, (byte)3);
@@ -83,6 +83,10 @@ void setup () {
     pinMode(keypad_cols_contacts[i], INPUT);
   }
 
+   // инициализация модуля вывода
+  lcd.init();
+  lcd.backlight();
+
   // инициализация потоков
   temperature_thread.onRun(temperature_handler);    
   temperature_thread.setInterval(1000);
@@ -95,9 +99,7 @@ void setup () {
   keypad_thread.onRun(keypad_handler);
   keypad_thread.setInterval(100);
 
-  // инициализация модуля вывода
-  lcd.init();
-  lcd.backlight();
+ 
 }
 
 // главная функция
@@ -127,7 +129,7 @@ void loop() {
       }
       lcd.clear();
     }
-    cycle_counter++;
+    cycle_counter = cycle_counter + 1;
     Serial.println("Cycle counter: " + String(cycle_counter));
     
     // запуск потока модуля клавиатуры
@@ -180,10 +182,10 @@ void loop() {
 void temperature_handler() {
   temperature_sensor.requestTemp();               // запрос температуры
   delay(1000);                                    // ожидание обработки температуры
-  if (temperature_sensor.readTemp()) {            // если температура прочитана
-    temperature = temperature_sensor.getTemp();   // запомнить тепературу
-    Serial.println("Temp sensor value: " +  String(temperature));
-  }
+  //if (temperature_sensor.readTemp()) {            // если температура прочитана
+  temperature = temperature_sensor.getTemp();   // запомнить тепературу
+  Serial.println("Temp sensor value: " +  String(temperature));
+  //}
 }
 
 // функция индикации наличия газов
@@ -193,14 +195,14 @@ void gas_handler() {
     has_gas = true;                               // запомнить состояние
     digitalWrite(gas_light_contact, HIGH);        // включить светодиод
     //digitalWrite(gas_piezo_contact, HIGH);        // включить пьезодинамик
-    tone(gas_piezo_contact, 1000, 1000);
+    //tone(gas_piezo_contact, 1000, 1000);
   }
   else {                                          // газы не обнаружены
     has_gas = false;                              // запомнить состояние
     digitalWrite(gas_light_contact, LOW);         // выключить светодиод
     // digitalWrite(gas_piezo_contact, LOW);         // выключить пьезодинамик
   }
-  Serial.print("Gas sensor value: " + String(value));
+  Serial.println("Gas sensor value: " + String(value));
 }
 
 // функция индикации наличия пламени
@@ -210,53 +212,61 @@ void fire_handler() {
     has_fire = true;                              // запомнить состояние
     digitalWrite(fire_light_contact, HIGH);       // включить светодиод
     //digitalWrite(fire_piezo_contact, HIGH);       // включить пьезодинамик
-    tone(fire_piezo_contact, 1000, 1000);
+    //tone(fire_piezo_contact, 1000, 1000);
   }
   else {                                          // пламя не обнаружено
     has_fire = false;                             // запомнить состояние
     digitalWrite(fire_light_contact, LOW);        // выключить светодиод
     //digitalWrite(fire_piezo_contact, LOW);        // выключить пьезодинамик
   }
-  Serial.print("Fire sensor value: " + String(value));
+  Serial.println("Fire sensor value: " + String(value));
 }
 
 // функция-обработчик ввода с клавиатуры
 void keypad_handler() {
   char pressed_key = keypad.getKey();             // нажатая клавиша
 
+  Serial.println("Pressed key: " + String(pressed_key));
+
   // режим вывода информации о температуре и наличии газов и пламени
   if (pressed_key == '0') {
     mode = OUTPUT_ALL;
+    Serial.println("Mode: " + String(mode));
     Serial.println("Change to mode OUTPUT_ALL");
   }
 
   // режим вывода информации о температуре
-  else if (pressed_key == '1') {
+  if (pressed_key == '1') {
     mode = OUTPUT_TEMPERATURE;
+    Serial.println("Mode: " + String(mode));
     Serial.println("Change to mode OUTPUT_TEMPERATURE");
   }
 
   // режим вывода информации о наличии газов
-  else if (pressed_key == '2') {
+  if (pressed_key == '2') {
     mode = OUTPUT_GAS;
+    Serial.println("Mode: " + String(mode));
     Serial.println("Change to mode OUTPUT_GAS");
   }
 
   // режим вывода информации о наличии пламени
-  else if (pressed_key == '3') {
+  if (pressed_key == '3') {
     mode = OUTPUT_FIRE;
+    Serial.println("Mode: " + String(mode));
     Serial.println("Change to mode OUTPUT_FIRE");
   }
 
   // вкючение устройства
-  else if (pressed_key == '*') {
+  if (pressed_key == '*') {
     device_work = true;
+    Serial.println("Device work: " + String(device_work));
     Serial.println("Switch on device");
   }
 
   // выключение устройства
-  else if (pressed_key == '#') {
+  if (pressed_key == '#') {
     device_work = false;
+    Serial.println("Device work: " + String(device_work));
     Serial.print("Switch device off");
   }
 }
