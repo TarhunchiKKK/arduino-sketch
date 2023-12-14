@@ -189,15 +189,15 @@ void temperature_handler() {
 // функция индикации наличия газов
 void gas_handler() {
   int value = analogRead(gas_contact);            // чтение значения датчика газов
-  if (value > 400) {                              // газы обнаружены
+  if (value > 280) {                              // газы обнаружены
     has_gas = true;                               // запомнить состоние
     digitalWrite(gas_light_contact, HIGH);        // включить светодиод
-    tone(gas_piezo_contact, 1000);
+    //tone(gas_piezo_contact, 1000);
   }
   else {                                          // газы не обнаружены
     has_gas = false;                              // запомнить состояние
     digitalWrite(gas_light_contact, LOW);         // выключить светодиод
-    noTone(gas_piezo_contact);
+    //noTone(gas_piezo_contact);
   }
   Serial.println("Gas sensor value: " + String(value));
 }
@@ -208,12 +208,12 @@ void fire_handler() {
   if (value <= 300) {                            // пламя обнаружено
     has_fire = true;                              // запомнить состояние
     digitalWrite(fire_light_contact, HIGH);       // включить светодиод
-    tone(fire_piezo_contact, 1000);
+    //tone(fire_piezo_contact, 1000);
   }
   else {                                          // пламя не обнаружено
     has_fire = false;                             // запомнить состояние
     digitalWrite(fire_light_contact, LOW);        // выключить светодиод
-    noTone(fire_piezo_contact);
+    //noTone(fire_piezo_contact);
   }
   Serial.println("Fire sensor value: " + String(value));
 }
