@@ -19,7 +19,7 @@ LiquidCrystal_I2C lcd(0x27, 16, 2);
 MicroDS18B20 <A3> temperature_sensor;
 
 // объявление параметров
-float temperature = 0.0;                  // значение температуры
+float temperature = 5.0;                  // значение температуры
 bool has_gas = false;                     // флаг наличия газа
 bool has_fire = false;                    // флаг наличия пламени
 
@@ -168,8 +168,6 @@ void loop() {
     digitalWrite(initial_light_contact, LOW);
     digitalWrite(gas_light_contact, LOW);
     digitalWrite(fire_light_contact, LOW);
-    //digitalWrite(gas_piezo_contact, LOW);
-    //digitalWrite(fire_piezo_contact, LOW);
   }
 
   // запуск потока модуля клавиатуры
@@ -182,25 +180,24 @@ void loop() {
 void temperature_handler() {
   temperature_sensor.requestTemp();               // запрос температуры
   delay(1000);                                    // ожидание обработки температуры
-  //if (temperature_sensor.readTemp()) {            // если температура прочитана
-  temperature = temperature_sensor.getTemp();   // запомнить тепературу
-  Serial.println("Temp sensor value: " +  String(temperature));
-  //}
+  if (temperature_sensor.readTemp()) {            // если температура прочитана
+    temperature = temperature_sensor.getTemp();   // запомнить тепературу
+    Serial.println("Temp sensor value: " +  String(temperature));
+  }
 }
 
 // функция индикации наличия газов
 void gas_handler() {
   int value = analogRead(gas_contact);            // чтение значения датчика газов
-  if (value > 200) {                              // газы обнаружены
-    has_gas = true;                               // запомнить состояние
+  if (value > 400) {                              // газы обнаружены
+    has_gas = true;                               // запомнить состоние
     digitalWrite(gas_light_contact, HIGH);        // включить светодиод
-    //digitalWrite(gas_piezo_contact, HIGH);        // включить пьезодинамик
-    //tone(gas_piezo_contact, 1000, 1000);
+    tone(gas_piezo_contact, 1000);
   }
   else {                                          // газы не обнаружены
     has_gas = false;                              // запомнить состояние
     digitalWrite(gas_light_contact, LOW);         // выключить светодиод
-    // digitalWrite(gas_piezo_contact, LOW);         // выключить пьезодинамик
+    noTone(gas_piezo_contact);
   }
   Serial.println("Gas sensor value: " + String(value));
 }
@@ -208,16 +205,15 @@ void gas_handler() {
 // функция индикации наличия пламени
 void fire_handler() {
   int value = analogRead(fire_contact);          // чтение значения датчика пламени
-  if (value >= 100) {                            // пламя обнаружено
+  if (value <= 300) {                            // пламя обнаружено
     has_fire = true;                              // запомнить состояние
     digitalWrite(fire_light_contact, HIGH);       // включить светодиод
-    //digitalWrite(fire_piezo_contact, HIGH);       // включить пьезодинамик
-    //tone(fire_piezo_contact, 1000, 1000);
+    tone(fire_piezo_contact, 1000);
   }
   else {                                          // пламя не обнаружено
     has_fire = false;                             // запомнить состояние
     digitalWrite(fire_light_contact, LOW);        // выключить светодиод
-    //digitalWrite(fire_piezo_contact, LOW);        // выключить пьезодинамик
+    noTone(fire_piezo_contact);
   }
   Serial.println("Fire sensor value: " + String(value));
 }
@@ -226,7 +222,7 @@ void fire_handler() {
 void keypad_handler() {
   char pressed_key = keypad.getKey();             // нажатая клавиша
 
-  Serial.println("Pressed key: " + String(pressed_key));
+  //Serial.println("Pressed key: " + String(pressed_key));
 
   // режим вывода информации о температуре и наличии газов и пламени
   if (pressed_key == '0') {
@@ -289,8 +285,8 @@ void display_handler() {
     
     // вывод информации температуре
     lcd.setCursor(0, 0);
-    lcd.print("Temperature:");
-    lcd.setCursor(0, 1);
+    lcd.print("Temp: ");
+    //lcd.setCursor(0, 1);
     lcd.print(temperature);
 
     // ввод информации о наличии газов
